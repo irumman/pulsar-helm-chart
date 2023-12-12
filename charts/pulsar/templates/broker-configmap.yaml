@@ -28,12 +28,22 @@ metadata:
     component: {{ .Values.broker.component }}
 data:
   # Metadata settings
+  {{- if and .Values.components.zookeeper }}
   zookeeperServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- else }}
+  zookeeperServers: ""
+  {{- end }}
+
+{{/*  # Deprecated. Use configurationMetadataStoreUrl */}}
   {{- if .Values.pulsar_metadata.configurationStore }}
   configurationStoreServers: "{{ template "pulsar.configurationStore.connect" . }}{{ .Values.pulsar_metadata.configurationStoreMetadataPrefix }}"
   {{- end }}
   {{- if not .Values.pulsar_metadata.configurationStore }}
+  {{- if and .Values.components.zookeeper }}
   configurationStoreServers: "{{ template "pulsar.zookeeper.connect" . }}{{ .Values.metadataPrefix }}"
+  {{- else }}
+  configurationStoreServers: ""
+  {{- end }}
   {{- end }}
 
   # Broker settings

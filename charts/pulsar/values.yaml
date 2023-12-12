@@ -656,6 +656,7 @@ pulsar_metadata:
   # configurationStore:
   configurationStoreMetadataPrefix: ""
   configurationStorePort: 2181
+  metadataStoreUrl: ""
   ## optional you can specify a nodeSelector for all init jobs (pulsar-init & bookkeeper-init)
   # nodeSelector:
     # cloud.google.com/gke-nodepool: default-pool

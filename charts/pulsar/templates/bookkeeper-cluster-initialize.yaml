@@ -41,6 +41,7 @@ spec:
       {{- if .Values.pulsar_metadata.nodeSelector }}
 {{ toYaml .Values.pulsar_metadata.nodeSelector | indent 8 }}
       {{- end }}
+      {{- if and .Values.components.zookeeper }}
       initContainers:
       - name: wait-zookeeper-ready
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
@@ -57,6 +58,7 @@ spec:
               sleep 3;
             done;
             {{- end}}
+      {{- end }}
       containers:
       - name: "{{ template "pulsar.fullname" . }}-{{ .Values.bookkeeper.component }}-init"
         image: "{{ template "pulsar.imageFullName" (dict "image" .Values.images.bookie "root" .) }}"
@@ -69,11 +71,13 @@ spec:
         args:
           - >
             bin/apply-config-from-env.py conf/bookkeeper.conf;
+            {{- if and .Values.components.zookeeper }}
             {{- include "pulsar.toolset.zookeeper.tls.settings" . | nindent 12 }}
+            {{- end }}
             if bin/bookkeeper shell whatisinstanceid; then
                 echo "bookkeeper cluster already initialized";
             else
-                {{- if not (eq .Values.metadataPrefix "") }}
+                {{- if and .Values.components.zookeeper not (eq .Values.metadataPrefix "") }}
                 bin/bookkeeper org.apache.zookeeper.ZooKeeperMain -server {{ template "pulsar.fullname" . }}-{{ .Values.zookeeper.component }} create {{ .Values.metadataPrefix }} && echo 'created for pulsar cluster "{{ template "pulsar.cluster.name" . }}"' &&
                 {{- end }}
                 bin/bookkeeper shell initnewcluster;

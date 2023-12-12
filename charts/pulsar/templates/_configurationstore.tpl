@@ -37,3 +37,13 @@ Define configuration store connection string
 {{- end -}}
 {{- end -}}
 
+{{/*
+Define configuration metadata-store
+*/}}
+{{- define "pulsar.metadataStoreUrl" -}}
+{{- if .Values.pulsar_metadata.metadataStoreUrl }}
+{{- .Values.pulsar_metadata.metadataStoreUrl }}
+{{- else -}}
+{{ template "pulsar.zookeeper.service" . }}
+{{- end -}}
+{{- end -}}

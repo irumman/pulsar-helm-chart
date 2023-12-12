@@ -173,7 +173,13 @@ spec:
           {{ .Values.bookkeeper.additionalCommand }}
         {{- end }}
           bin/apply-config-from-env.py conf/bookkeeper.conf;
+          {{- if and .Values.components.zookeeper }}
           {{- include "pulsar.bookkeeper.zookeeper.tls.settings" . | nindent 10 }}
+          {{- end }}
+          {{- if and .Values.configData (contains .Values.configData "metadata") }}
+          BK_METADATA_OPTIONS="-Dbookkeeper.metadata.bookie.drivers=org.apache.pulsar.metadata.bookkeeper.PulsarMetadataBookieDriver -Dbookkeeper.metadata.client.drivers=org.apache.pulsar.metadata.bookkeeper.PulsarMetadataClientDriver";
+          OPTS="${OPTS} ${BK_METADATA_OPTIONS}
+          {{- end }}
           OPTS="${OPTS} -Dlog4j2.formatMsgNoLookups=true" exec bin/pulsar bookie;
       {{- if and .Values.rbac.enabled .Values.rbac.psp }}
         securityContext:
