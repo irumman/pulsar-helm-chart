@@ -1,0 +1,130 @@
+initialize: true
+# disabled AntiAffinity
+affinity:
+  anti_affinity: false
+metadataPrefix: "/configuration-store"
+common:
+  storageClassName: csi-hostpath-sc
+
+# disable auto recovery
+components:
+  # zookeeper
+  zookeeper: false
+  # bookkeeper
+  bookkeeper: true
+  # bookkeeper - autorecovery
+  autorecovery: false
+  # broker
+  broker: true
+  # functions
+  functions: false
+  # proxy
+  proxy: true
+  # toolset
+  toolset: false
+  # pulsar manager
+  pulsar_manager: false
+
+kube-prometheus-stack:
+  enabled: false
+
+defaultPulsarImageTag: 3.1.1
+
+zookeeper:
+  replicaCount: 1
+  podMonitor:
+    enabled: false
+  volumes:
+    # use a persistent volume or emptyDir
+    persistence: true
+    data:
+      name: data
+      size: 200Mi
+      local_storage: false
+      storageClassName: csi-hostpath-sc
+
+bookkeeper:
+  replicaCount: 1
+  podMonitor:
+    enabled: false
+  configData:
+    PULSAR_PREFIX_metadataServiceUri: metadata-store:etcd:http://etcd-release.default.svc.cluster.local:2379
+    PULSAR_PREFIX_zkServers: ''
+  probe:
+    liveness:
+      enabled: true
+    readiness:
+      enabled: true
+    startup:
+      enabled: true
+  volumes:
+    persistence: true
+    journal:
+      name: journal
+      size: 200Mi
+      local_storage: false
+      storageClassName: csi-hostpath-sc
+    ledgers:
+      name: ledgers
+      size: 200Mi
+      local_storage: false
+      storageClassName: csi-hostpath-sc
+
+
+broker:
+  replicaCount: 1
+  podMonitor:
+    enabled: false
+  configData:
+    ## Enable `autoSkipNonRecoverableData` since bookkeeper is running
+    ## without persistence
+    autoSkipNonRecoverableData: "true"
+    # storage settings
+    managedLedgerDefaultEnsembleSize: "1"
+    managedLedgerDefaultWriteQuorum: "1"
+    managedLedgerDefaultAckQuorum: "1"
+    PULSAR_PREFIX_metadataStoreUrl: etcd:http://etcd-release.default.svc.cluster.local:2379
+    # following two are required for bookkeeper ready check at initContainers
+    PULSAR_PREFIX_metadataServiceUri: metadata-store:etcd:http://etcd-release.default.svc.cluster.local:2379
+    PULSAR_PREFIX_zkServers: ''
+  probe:
+    liveness:
+      enabled: true
+    readiness:
+      enabled: true
+    startup:
+      enabled: true
+  volumes:
+    # use a persistent volume or emptyDir
+    persistence: true
+    data:
+      name: data
+      size: 200Mi
+      local_storage: false
+      storageClassName: csi-hostpath-sc
+
+
+
+proxy:
+  replicaCount: 1
+  podMonitor:
+    enabled: false
+  ports:
+    http: 8080
+  probe:
+    liveness:
+      enabled: false
+    readiness:
+      enabled: false
+    startup:
+      enabled: false
+  configData:
+    brokerServiceURL: "pulsar://pulsar-release-broker.pulsar.svc.cluster.local:6650/"
+    brokerWebServiceURL: "http://pulsar-release-broker.pulsar.svc.cluster.local:8080/"
+
+autorecovery:
+  podMonitor:
+    enabled: false
+
+pulsar_metadata:
+  metadataStoreUrl: etcd:http://etcd-release.default.svc.cluster.local:2379
